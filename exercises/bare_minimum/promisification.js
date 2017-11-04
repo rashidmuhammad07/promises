@@ -8,6 +8,7 @@ var request = require('request');
 var crypto = require('crypto');
 var Promise = require('bluebird');
 
+
 // (1) Asyncronous HTTP request
 var getGitHubProfile = function(user, callback) {
   var options = {
@@ -27,7 +28,24 @@ var getGitHubProfile = function(user, callback) {
   });
 };
 
-var getGitHubProfileAsync; // TODO
+var getGitHubProfileAsync = function(user, callback) {
+  request = Promise.promisify(request);
+  var options = {
+    url: 'https://api.github.com/users/' + user,
+    headers: { 'User-Agent': 'request' },
+    json: true  // will JSON.parse(body) for us
+  };
+  return request.getAsync(options)
+    .then( 
+      function(res) {
+        if (res.body && res.body.message) {
+          throw new Error('Failed to get GitHub profile: ' + res.body.message);
+        } else {
+          return res.body;
+        }
+      }
+    ).catch(callback);
+}; 
 
 
 // (2) Asyncronous token generation
@@ -38,7 +56,13 @@ var generateRandomToken = function(callback) {
   });
 };
 
-var generateRandomTokenAsync; // TODO
+var generateRandomTokenAsync = function (callback) {
+  crypto = Promise.promisifyAll(crypto);
+  return crypto.randomBytesAsync(20)
+    .then(function(buffer) {
+      return buffer.toString('hex');
+    }).catch(callback);
+};
 
 
 // (3) Asyncronous file manipulation
@@ -56,7 +80,18 @@ var readFileAndMakeItFunny = function(filePath, callback) {
   });
 };
 
-var readFileAndMakeItFunnyAsync; // TODO
+var readFileAndMakeItFunnyAsync = function(filePath, callback) {
+  fs = Promise.promisifyAll(fs);
+  return fs.readFileAsync(filePath, 'utf8')
+    .then(function (file) {
+      return file.split('\n')
+      .map(function(line) {
+        return line + ' lol';
+      })
+      .join('\n');
+    })
+    .catch(callback);
+}; // TODO
 
 // Export these functions so we can test them and reuse them in later exercises
 module.exports = {
