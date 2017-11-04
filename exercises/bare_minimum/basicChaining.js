@@ -17,13 +17,12 @@ var gitHubProfile = require('./promisification').getGitHubProfileAsync;
 
 var fetchProfileAndWriteToFile = function(readFilePath, writeFilePath) {
   fs = Promise.promisifyAll(fs);
+
   return pluckFirst(readFilePath)
-    .then(function(userName) {
-      return gitHubProfile(userName)
-        .then(function(profile) {
-          return fs.writeFileAsync(writeFilePath, JSON.stringify(profile));
-        });
-    }); 
+    .then(gitHubProfile)
+    .then(function(data) {
+      return fs.writeFileAsync(writeFilePath, JSON.stringify(data));
+    });
 };
 
 // Export these functions so we can test them
